@@ -19,6 +19,7 @@ app.post('/insert', async (req, res) => {
         ProductName: req.body.ProductName,
         ProductPrice: req.body.Price,
         ProductQuantity: req.body.Quantity,
+        Description: req.body.Description,
     });
 
     try {
@@ -62,10 +63,11 @@ app.put('/update', async (req, res) => {
         const NewProductName =req.body.name ;
         const NewProductPrice=req.body.price;
         const NewProductQuantity = req.body.quantity;
+        const NewProductDescription= req.body.Description;
         const id = req.body.id;
     
     try {
-        await ProductModel.updateMany({_id : id},{ProductName : NewProductName , ProductPrice : NewProductPrice , ProductQuantity : NewProductQuantity , });
+        await ProductModel.updateMany({_id : id},{ProductName : NewProductName , ProductPrice : NewProductPrice , ProductQuantity : NewProductQuantity , Description : NewProductDescription, });
         res.status(200).send("update");
         
     } catch (err) {

@@ -6,13 +6,12 @@ function App() {
   const [productName, setProductName] = useState('');
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
-  const [newProductName, setNewProductName] = useState('');
-  const [newProductPrice, setNewProductPrice] = useState('');
-  const [newProductQuantity, setNewProductQuantity] = useState('');
+  const [description, setDescription] = useState('');
   const [productList, setProductList] = useState([]);
   const [searchProductName, setSearchProductName] = useState('');
   const [priceError, setPriceError] = useState('');
   const [quantityError, setQuantityError] = useState('');
+  const [modificationValues, setModificationValues] = useState({});
 
   useEffect(() => {
     fetchData();
@@ -35,7 +34,7 @@ function App() {
       console.log(error);
       alert("An error occurred while searching for the product.");
     }
-  };  
+  };
 
   const handlePriceChange = (event) => {
     const value = Number(event.target.value);
@@ -65,7 +64,6 @@ function App() {
       return;
     }
 
-
     if (price <= 0) {
       alert('Price must be greater than zero');
       return;
@@ -76,10 +74,16 @@ function App() {
       return;
     }
 
+    if (description.trim() === '') {
+      alert('Product description cannot be empty');
+      return;
+    }
+
     Axios.post('http://localhost:8081/insert', {
       ProductName: productName,
       Price: price,
       Quantity: quantity,
+      Description: description,
     })
       .then(() => {
         alert('Product added successfully');
@@ -87,6 +91,7 @@ function App() {
         setProductName('');
         setPrice(0);
         setQuantity(0);
+        setDescription('');
       })
       .catch((error) => {
         console.log('Error adding product:', error);
@@ -94,33 +99,45 @@ function App() {
   };
 
   const updateProduct = (id) => {
-    if (newProductName.trim() === '') {
+    if (modificationValues[id]?.newProductName?.trim() === '') {
       alert('The new product name cannot be empty');
       return;
     }
 
-    if (newProductPrice <= 0) {
+    if (modificationValues[id]?.newProductPrice <= 0) {
       alert('New price must be greater than zero');
       return;
     }
 
-    if (newProductQuantity <= 0) {
+    if (modificationValues[id]?.newProductQuantity <= 0) {
       alert('New quantity must be greater than zero');
+      return;
+    }
+
+    if (modificationValues[id]?.newProductDescription?.trim() === '') {
+      alert('Product description cannot be empty');
       return;
     }
 
     Axios.put('http://localhost:8081/update', {
       id: id,
-      name: newProductName,
-      price: newProductPrice,
-      quantity: newProductQuantity,
+      name: modificationValues[id]?.newProductName || productName,
+      price: modificationValues[id]?.newProductPrice || price,
+      quantity: modificationValues[id]?.newProductQuantity || quantity,
+      description: modificationValues[id]?.newProductDescription || description,
     })
       .then(() => {
         alert('Product updated successfully');
         fetchData();
-        setNewProductName('');
-        setNewProductPrice('');
-        setNewProductQuantity('');
+        setModificationValues((prevValues) => ({
+          ...prevValues,
+          [id]: {
+            newProductName: '',
+            newProductPrice: '',
+            newProductQuantity: '',
+            newProductDescription: '',
+          },
+        }));
       })
       .catch((error) => {
         console.log('Error updating product:', error);
@@ -141,7 +158,6 @@ function App() {
   return (
     <div className="App">
       <h1>Confledis "CRUD application"</h1>
-      {/* Zone de recherche */}
       <div className="search-container">
         <input
           className="search-input"
@@ -155,17 +171,23 @@ function App() {
         </button>
       </div>
 
-     <div className= "info-product">
-     <label>Product's name</label>
-      <input type="text" value={productName} onChange={(event) => setProductName(event.target.value)} />
-      <label>Product's price</label>
-      <input type="number" value={price} onChange={handlePriceChange} />
-      {priceError && <div className="error-message">{priceError}</div>}
-      <label>Product's quantity</label>
-      <input type="number" value={quantity} onChange={handleQuantityChange} />
-      {quantityError && <div className="error-message">{quantityError}</div>}
-      <button onClick={AddToList}>Add product</button>
-     </div>
+      <div className="info-product">
+        <label>Product's name</label>
+        <input type="text" value={productName} onChange={(event) => setProductName(event.target.value)} />
+        <label>Product's price</label>
+        <input type="number" value={price} onChange={handlePriceChange} />
+        {priceError && <div className="error-message">{priceError}</div>}
+        <label>Product's quantity</label>
+        <input type="number" value={quantity} onChange={handleQuantityChange} />
+        {quantityError && <div className="error-message">{quantityError}</div>}
+        <label>Product's description</label>
+        <input
+          type="text"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+        />
+        <button onClick={AddToList}>Add product</button>
+      </div>
       <hr />
       <h1>Product's list</h1>
       <div className="product-list">
@@ -174,12 +196,21 @@ function App() {
             <h1>{val.ProductName}</h1>
             <h1>{val.ProductPrice}</h1>
             <h1>{val.ProductQuantity}</h1>
+          
+            <p>{val.Description}</p>
             <div>
               <input
                 type="text"
                 placeholder="New product name ..."
+                value={modificationValues[val._id]?.newProductName || ''}
                 onChange={(event) => {
-                  setNewProductName(event.target.value);
+                  setModificationValues((prevValues) => ({
+                    ...prevValues,
+                    [val._id]: {
+                      ...prevValues[val._id],
+                      newProductName: event.target.value,
+                    },
+                  }));
                 }}
               />
             </div>
@@ -187,8 +218,15 @@ function App() {
               <input
                 type="text"
                 placeholder="New product price ..."
+                value={modificationValues[val._id]?.newProductPrice || ''}
                 onChange={(event) => {
-                  setNewProductPrice(event.target.value);
+                  setModificationValues((prevValues) => ({
+                    ...prevValues,
+                    [val._id]: {
+                      ...prevValues[val._id],
+                      newProductPrice: event.target.value,
+                    },
+                  }));
                 }}
               />
             </div>
@@ -196,14 +234,37 @@ function App() {
               <input
                 type="text"
                 placeholder="New product quantity ..."
+                value={modificationValues[val._id]?.newProductQuantity || ''}
                 onChange={(event) => {
-                  setNewProductQuantity(event.target.value);
+                  setModificationValues((prevValues) => ({
+                    ...prevValues,
+                    [val._id]: {
+                      ...prevValues[val._id],
+                      newProductQuantity: event.target.value,
+                    },
+                  }));
+                }}
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                placeholder="New product description ..."
+                value={modificationValues[val._id]?.newProductDescription || ''}
+                onChange={(event) => {
+                  setModificationValues((prevValues) => ({
+                    ...prevValues,
+                    [val._id]: {
+                      ...prevValues[val._id],
+                      newProductDescription: event.target.value,
+                    },
+                  }));
                 }}
               />
             </div>
             <div className="button-group">
-              <button class="update-button" onClick={() => updateProduct(val._id)}>Update</button>
-              <button class="delete-button" onClick={() => deleteProduct(val._id)}>Delete</button>
+              <button className="update-button" onClick={() => updateProduct(val._id)}>Update</button>
+              <button className="delete-button" onClick={() => deleteProduct(val._id)}>Delete</button>
             </div>
           </div>
         ))}
