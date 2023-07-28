@@ -1,11 +1,13 @@
-version: '3.9'
+version: '3.9'  # Spécifie la version de la syntaxe utilisée dans le fichier Docker Compose.
 
-services:
-  mongodb:
-    image: mongo
-    container_name: mongodb_container
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./mongodb_data:/data/db
+services:  # Définit les services ou conteneurs que nous souhaitons exécuter.
+  mongodb:  # Le nom du service, dans ce cas, "mongodb".
+    image: mongo  # Spécifie l'image Docker utilisée pour créer le conteneur. Ici, nous utilisons l'image officielle de MongoDB.
+    container_name: mongodb_container  # Donne un nom spécifique au conteneur créé à partir de l'image.
+    restart: always  # Indique que le conteneur doit toujours redémarrer automatiquement en cas d'échec.
+
+    ports:  # Permet de faire correspondre les ports du conteneur avec les ports de la machine hôte.
+      - "27017:27017"  # Le port 27017 du conteneur est mappé sur le port 27017 de la machine hôte, permettant d'accéder à MongoDB depuis l'extérieur.
+
+    volumes:  # Permet de monter des volumes, assurant ainsi la persistance des données même si le conteneur est supprimé.
+      - ./mongodb_data:/data/db  # Le dossier "./mongodb_data" sur la machine hôte est monté dans le dossier "/data/db" du conteneur, où MongoDB stockera ses données.

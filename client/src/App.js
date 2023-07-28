@@ -28,8 +28,9 @@ function App() {
 
   const searchProductByName = async () => {
     try {
+      //Stock du résultat de la route GET avec "Url dynamique qui contient le produit recherché " comme argument" dans la variable response
       const response = await Axios.get(`http://localhost:8081/search/${searchProductName}`);
-      setProductList(response.data);
+      setProductList(response.data);//mis à jour la variable d'état productList avec les données renvoyées par la requête HTTP GET
     } catch (error) {
       console.log(error);
       alert("An error occurred while searching for the product.");
@@ -59,6 +60,7 @@ function App() {
   };
 
   const AddToList = () => {
+    //Gestion d'erreurs
     if (productName.trim() === '') {
       alert('Product name cannot be empty');
       return;
@@ -78,13 +80,14 @@ function App() {
       alert('Product description cannot be empty');
       return;
     }
-
+    // Envoie une requête POST pour ajouter le nouveau produit à la base de données
     Axios.post('http://localhost:8081/insert', {
       ProductName: productName,
       Price: price,
       Quantity: quantity,
       Description: description,
     })
+    //si la requete POST est réussie
       .then(() => {
         alert('Product added successfully');
         fetchData();
@@ -93,67 +96,73 @@ function App() {
         setQuantity(0);
         setDescription('');
       })
+      //Si la requete POST echoue 
       .catch((error) => {
         console.log('Error adding product:', error);
       });
   };
 
-  const updateProduct = (id) => {
+  
+
+  const updateProduct = async (id) => {
+    // Gestion d'erreurs
     if (modificationValues[id]?.newProductName?.trim() === '') {
       alert('The new product name cannot be empty');
       return;
     }
-
+  
     if (modificationValues[id]?.newProductPrice <= 0) {
       alert('New price must be greater than zero');
       return;
     }
-
+  
     if (modificationValues[id]?.newProductQuantity <= 0) {
       alert('New quantity must be greater than zero');
       return;
     }
-
+  
     if (modificationValues[id]?.newProductDescription?.trim() === '') {
       alert('Product description cannot be empty');
       return;
     }
-
-    Axios.put('http://localhost:8081/update', {
-      id: id,
-      name: modificationValues[id]?.newProductName || productName,
-      price: modificationValues[id]?.newProductPrice || price,
-      quantity: modificationValues[id]?.newProductQuantity || quantity,
-      description: modificationValues[id]?.newProductDescription || description,
-    })
-      .then(() => {
-        alert('Product updated successfully');
-        fetchData();
-        setModificationValues((prevValues) => ({
-          ...prevValues,
-          [id]: {
-            newProductName: '',
-            newProductPrice: '',
-            newProductQuantity: '',
-            newProductDescription: '',
-          },
-        }));
-      })
-      .catch((error) => {
-        console.log('Error updating product:', error);
+  
+    try {
+      await Axios.put('http://localhost:8081/update', {
+        id: id,
+        name: modificationValues[id]?.newProductName || productName,
+        price: modificationValues[id]?.newProductPrice || price,
+        quantity: modificationValues[id]?.newProductQuantity || quantity,
+        description: modificationValues[id]?.newProductDescription || description,
       });
+  
+      alert('Product updated successfully');
+      fetchData();
+  
+      setModificationValues((prevValues) => ({
+        ...prevValues,
+        [id]: {
+          newProductName: '',
+          newProductPrice: '',
+          newProductQuantity: '',
+          newProductDescription: '',
+        },
+      }));
+    } catch (error) {
+      console.log('Error updating product:', error);
+    }
   };
+  
 
-  const deleteProduct = (id) => {
-    Axios.delete(`http://localhost:8081/delete/${id}`)
-      .then(() => {
-        alert('Product deleted successfully');
-        fetchData();
-      })
-      .catch((error) => {
-        console.log('Error deleting product:', error);
-      });
+  const deleteProduct = async (id) => {
+    try {
+      await Axios.delete(`http://localhost:8081/delete/${id}`);
+      alert('Product deleted successfully');
+      fetchData();
+    } catch (error) {
+      console.log('Error deleting product:', error);
+    }
   };
+  
 
   return (
     <div className="App">
